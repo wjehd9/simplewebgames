@@ -1,0 +1,273 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>투포환 게임</title>
+    <script>
+        var ctx; // 캔버스에 대한 정의를 위한다.
+        var m = 0, n = 0; // 수평과 수직에 대해 세기를 정한다.
+        var v0, gravity = 9.8; // 실제 움직일 때의 속도, 중력이다.
+        var a = 48, b = 222; // 대포의 좌표를 나타낸다.
+        var ballx, bally, ballrad = 5; // 공의 좌표와 반지름을 나타낸다.(단 ballx, bally는 초기값으로 설정)
+        var startsitex, startsitey; // 공이 출발하는 시점의 좌표이다.
+        var r = 25; // 대포와 공 사이의 초기 거리
+        var an = 0, angle; // 움직인 공의 각도와 변환된 각도를 정하기 위한 변수
+        var angle; // 대포와 공이 구성하는 각도
+        var maxlengthtime; // 최대 거리의 점에 도달할 때의 시간
+        var distance, disx, dixy; // 공이 이동한 거리를 나타내기 위한 변수이다.
+        var checkdistance, checkdisx, checkdisy; // 공과 대포 사이의 거리를 나타내기 위한 변수이다.
+        var time = new Date(); // 시간에 대한 변수를 나타내기 위한 변수이다.
+        var tempYear, tempMonth, tempDay, tempHours, tempMinutes, tempSeconds, tempMilliseconds; // 시간을 각 요소별로 나타내기 위한 변수
+        var startTime = 0; // space를 뗀 시점을 나타내기 위함
+        var doTime = 0; // 도착하기까지 걸린 시간 나타내기 위함
+        var movetemp, processtemp; // 함수의 주기적인 실행과 관련된 변수이다.
+        var angle1, angle2; // 아웃 범위를 판정하기 위한 각도(위, 아래)
+        var w, cycle = 0, t = 0.1, accel, tempv; // [원심력] 각속도, 각의 증가량, 기준이 되는 시간, 가속도, 원심력에서의 속도
+        var score = new Array();
+        score = [0, 0, 0, 0, 0, 0];
+        var strScore;
+
+        function init() {
+            ctx = document.getElementById('canvas').getContext('2d');
+
+            setInterval(field, 100);
+            movetemp = setInterval(objectpath, 100);
+            setInterval(calculate, 100);
+            processtemp = setInterval(processtime, 1);
+            scoreRead();
+            localStorage.setItem("score", 0);
+        }
+        function field() {
+            ctx.clearRect(0, 0, 800, 450);
+            ctx.beginPath();
+            var field2 = new Image();
+            field2.src = "field2.png";
+            ctx.drawImage(field2, 0, 0);
+            ctx.closePath();
+        }
+        function objectpath() {
+            angle = an % 360;
+            v0 = tempv / 500;
+            document.getElementById('v0').innerHTML = "공의 초기 속력은 : " + v0.toFixed(2);
+
+            // 공을 던지고 난 후의 움직임을 나타낸다.
+            if (startTime != 0) {
+                if (doTime <= maxlengthtime) {
+                    objectmove();
+                }
+            }
+            // 공을 던지기 전의 움직임을 나타낸다.
+            else {
+                ballx = a + r * Math.cos(Math.PI / 180 * angle);
+                bally = b - r * Math.sin(Math.PI / 180 * angle);
+                startsitex = ballx;
+                startsitey = bally;
+            }
+
+            ctx.beginPath();
+            ctx.fillStyle = "rgb(0,0,0)";
+            ctx.arc(ballx, bally, ballrad, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.closePath();
+        }
+        function objectmove() {
+            // 포물선 운동을 통해 공의 움직임을 표시하기 위한 좌표 계산
+            ballx = startsitex + v0 * Math.cos(Math.PI / 180 * angle) * doTime;
+            bally = startsitey - v0 * Math.sin(Math.PI / 180 * angle) * doTime + gravity * Math.pow(doTime, 2) / 2;
+
+            // 공의 진행 상황에 따른 아웃 처리 - 1(캔버스의 범위를 넘어섰을 때)
+            if (ballx < 0 || ballx > 800 || bally < 0 || bally > 450) {
+                alert("아웃입니다!!");
+                clearInterval(movetemp);
+                clearInterval(processtemp);
+                location.reload();
+            }
+        }
+        function calculate() {
+            // 포물선 운동에서 얻을 수 있는 최대 시간에 대한 계산
+            var sintemp = Math.sin(Math.PI / 180 * angle);
+            maxlengthtime = 2 * v0 * Math.abs(sintemp) / gravity;
+            // 공이 시작 범위 내애 있는지에 대한 계산
+            checkdisx = ballx - 48;
+            checkdisy = bally - 222;
+            checkdistance = Math.sqrt(Math.pow(checkdisx, 2) + Math.pow(checkdisy, 2));
+            // 공이 이동한 거리에 대한 계산
+            disx = ballx - startsitex;
+            disy = bally - startsitey;
+            distance = Math.sqrt(Math.pow(disx, 2) + Math.pow(disy, 2));
+            // 아웃 판정에 대한 계산
+            angle1 = anglecheck(ballx - 48, bally - 197);
+            angle2 = anglecheck(ballx - 48, bally - 247);
+            // 원심력에 대한 계산
+            w = cycle / t;
+            accel = r * Math.pow(w, 2);
+            tempv = accel * t;
+        }
+        function anglecheck(x, y) {
+            return Math.atan2(y, x) * 180 / Math.PI;
+        }
+        function processtime() {
+            var now = new Date();
+            doTime = (now - startTime) / 1000;
+            // 공을 던지게 되었을 때이다.
+            if (startTime != 0) {
+                if (doTime > maxlengthtime) {
+                    doTime = maxlengthtime;
+                    // 공의 진행 상황에 따른 아웃 처리 - 2(중심 원 이내에 떨어졌을 때)
+                    if (checkdistance <= 25 || distance == 0) {
+                        alert("다시 던지시오");
+                        clearInterval(processtemp);
+                        clearInterval(movetemp);
+                        location.reload();
+                        return 0;
+                    } else if (checkdistance > 25) {
+                        // 공의 진행 상황에 따른 아웃 처리 - 3(중심 원은 넘었으나 각도가 90~270 일 때)
+                        if (angle >= 90 && angle <= 270) {
+                            alert("아웃입니다.");
+                            clearInterval(processtemp);
+                            clearInterval(movetemp);
+                            location.reload();
+                            return 0;
+                        }
+                        // 공의 진행 상황에 따른 아웃 처리 - 4(경기장 선을 넘어섰을 때)
+                        if (angle1 < -14.68 || angle2 > 15.11) {
+                            alert("아웃입니다.");
+                            clearInterval(processtemp);
+                            clearInterval(movetemp);
+                            location.reload();
+                            return 0;
+                        }
+                        // 공의 진행 상황에 따른 합격 처리 
+                        else {
+                            alert("합격입니다.\n공이 움직인 시간은 : " + doTime.toFixed(2) + "초 이며, 공이 움직인 거리는 : " + distance.toFixed(2) + "이다.");
+                            scoreAdd();
+                            clearInterval(processtemp);
+                            clearInterval(movetemp);
+                            location.reload();
+                            return 0;
+                        }
+                    }
+                }
+            }
+        }
+        // 스페이스바 키를 떼었을 때 발생하는 기능이다.
+        // 뗀 시점의 시간을 저장해둔다.
+        document.onkeyup = function (e) {
+            var x = event.which || event.charCode;
+            if (x == 32) {
+                var time = new Date();
+                tempYear = time.getFullYear();
+                tempMonth = time.getMonth();
+                tempDay = time.getDay() + 23;
+                tempHours = time.getHours();
+                tempMinutes = time.getMinutes();
+                tempSeconds = time.getSeconds();
+                tempMilliseconds = time.getMilliseconds();
+                startTime = new Date(tempYear, tempMonth, tempDay, tempHours, tempMinutes, tempSeconds, tempMilliseconds);
+            }
+        };
+        // 스페이스바 키를 누르고 있을 때 발생하는 기능이다.
+        // 누르고 있으면 각도랑 가속도가 늘어나게 된다.
+        document.onkeydown = function (e) {
+            var x = event.which || event.charCode;
+            if (x == 32) {
+                // 각의 증가량을 17까지 한계로 한다.
+                if (cycle < 17) {
+                    an = an + cycle;
+                    cycle = cycle + 0.05;
+                }
+                // 각의 증가량이 17을 넘으면 17으로 고정시킨다. 
+                else if (cycle >= 17) {
+                    an = an + cycle;
+                    cycle = 17;
+                }
+            }
+        }
+        function scoreAdd() {
+            if (typeof (Storage) !== "undefined") {
+                // Store;
+                localStorage.setItem("score", distance.toFixed(2));
+            }
+        }
+        function scoreRead() {
+            if (typeof (Storage) !== "undefined") {
+                // Receive
+                var strScore = localStorage.getItem("score");
+
+                score[0] = localStorage.getItem("score1");
+                score[1] = localStorage.getItem("score2");
+                score[2] = localStorage.getItem("score3");
+                score[3] = localStorage.getItem("score4");
+                score[4] = localStorage.getItem("score5");
+
+                for (var i = 0; i < 6; i++) {
+                    if (i < 5) {
+                        if (score[i] == 'null') {
+                            score[i] = strScore;
+                            break;
+                        }
+                    }
+                    if (i == 5) {
+                        score[5] = strScore;
+                        break;
+                    }
+                }
+
+                scoreCompare();
+
+                document.getElementById("log1").innerHTML = "1위 : " + localStorage.getItem("score1");
+                document.getElementById("log2").innerHTML = "2위 : " + localStorage.getItem("score2");
+                document.getElementById("log3").innerHTML = "3위 : " + localStorage.getItem("score3");
+                document.getElementById("log4").innerHTML = "4위 : " + localStorage.getItem("score4");
+                document.getElementById("log5").innerHTML = "5위 : " + localStorage.getItem("score5");
+            }
+        }
+        function scoreCompare() {
+            score.sort((a, b) => b - a);
+
+            localStorage.setItem("score1", score[0]);
+            localStorage.setItem("score2", score[1]);
+            localStorage.setItem("score3", score[2]);
+            localStorage.setItem("score4", score[3]);
+            localStorage.setItem("score5", score[4]);
+        }
+    </script>
+    <style>
+        header {
+            width: 1000px;
+        }
+
+        #score {
+            float: right;
+            width: 180px;
+            line-height: 8px;
+        }
+
+        #infofirst {
+            float: left;
+            width: 240px;
+            line-height: 8px;
+        }
+    </style>
+</head>
+
+<body onload="init();">
+    <header>
+        <canvas id="canvas" width="800" height="450" style="border:10px solid purple"></canvas>
+        <article id="score">
+            <h3><strong>거리 순위</strong></h3>
+            <p id="log1"></p>
+            <p id="log2"></p>
+            <p id="log3"></p>
+            <p id="log4"></p>
+            <p id="log5"></p>
+        </article>
+    </header>
+
+    <article id="infofirst">
+        <p id="v0"></p>
+    </article>
+</body>
+
+</html>
