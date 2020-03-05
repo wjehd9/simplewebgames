@@ -1,0 +1,1219 @@
+<html>
+
+<head>
+    <title>주사위 던지기</title>
+    <script>
+        var cwidth = 400;
+        var cheight = 300;
+        var dicex = 50; // 밑에 dotrad까지 주사위와 관련된 변수들 설정
+        var dicey = 50;
+        var dicewidth = 100;
+        var diceheight = 100;
+        var dotrad = 6;
+        var ctx; // 주사위 그림에 대한 정의를 위함
+        var ctx2; // 필드 그림에서 사람의 위치에 대한 정의를 위함
+        var dx;
+        var dy;
+        var dice1;
+        var dice2;
+        var context; // 첫 시작시 필드 그림에 대한 정의를 위함
+        var choice; // 1, 2번 사람을 구분짓기 위한 변수
+        var real = [["", "", ""], ["", "", ""]]; // 아이템이 실제로 있는가 하는 변수
+        var sitenum1 = 0; // 1번 사람의 위치
+        var sitenum2 = 0; // 2번 사람의 위치
+        var num1x; // 1번 사람의 위치와 관련된 점의 x좌표
+        var num1y; // 1번 사람의 위치와 관련된 점의 y좌표 
+        var num2x; // 2번 사람의 위치와 관련된 점의 x좌표
+        var num2y; // 2번 사람의 위치와 관련된 점의 y좌표
+        var btn1; // 1번 버튼 정의
+        var btn2; // 2번 버튼 정의
+        var site = 0; // 위치를 임시로 저장시키기 위한 변수
+        var num1 = 0; // 1번 사람의 절대적인 위치
+        var num2 = 0; // 2번 사람의 절대적인 위치
+        var tempNum1; // 1번 사람의 절대적인 위치를 임시로 저장시키기 위한 변수
+        var tempNum2; // 2번 사람의 절대적인 위치를 임시로 저장시키기 위한 변수
+        var tempSitenum1; // 1번 사람의 위치를 임시로 저장시키기 위한 변수
+        var tempSitenum2; // 2번 사람의 위치를 임시로 저장시키기 위한 변수
+        var tempNum; // 아이템 이름 저장을 위해 임시로 설정한 변수(사람)
+        var tempItem; // 아이템 이름 저장을 위해 임시로 설정한 변수(아이템)
+        var a = new Array(); // tempNum을 임시로 저장시키기 위한 변수
+        a = [0,0,0,0,0,0];
+        var b = new Array(); // tempItem을 임시로 저장시키기 위한 변수
+        b = [0,0,0,0,0,0];
+        var input = prompt('판돈을 입력하시오', ''); // 처음에 판돈을 정하기 위한 변수
+        var num1money; // 1번 사람의 소지 금액
+        var num2money; // 2번 사람의 소지 금액
+        var list = new Array(); // 아이템의 리스트 정의
+        var num1Item1; // 1번 사람의 1번 아이템
+        var num1Item2; // 1번 사람의 2번 아이템
+        var num1Item3; // 1번 사람의 3번 아이템
+        var num2Item1; // 2번 사람의 1번 아이템
+        var num2Item2; // 2번 사람의 2번 아이템
+        var num2Item3; // 2번 사람의 3번 아이템
+
+        num1money = input;
+        num2money = input;
+
+        function money() {
+            if (num1 > num2) { // 1번 위치 > 2번 위치
+                if (num2money < (input / 2)) {
+                    num1money = num1money - (num1 - num2) * 5; // 나아간 만큼 1번 사람의 금액이 줄어든다.
+                } else {
+                    num2money = num2money - (num1 - num2) * 5; // 뒤쳐진 만큼 2번 사람의 금액이 줄어든다.
+                }
+            } else if (num1 < num2) { // 1번 위치 < 2번 위치
+                if (num1money < (input / 2)) {
+                    num2money = num2money - (num2 - num1) * 5; // 나아간 만큼 2번 사람의 금액이 줄어든다.
+                } else {
+                    num1money = num1money - (num2 - num1) * 5; // 뒤쳐진 만큼 1번 사람의 금액이 줄어든다.
+                }
+            } if (num1money <= 0) {
+                alert("2번 사람이 이겼습니다.");
+            } if (num2money <= 0) {
+                alert("1번 사람이 이겼습니다.");
+            } else {
+
+            }
+            document.f5.money1.value = num1money;
+            document.f5.money2.value = num2money;
+        }
+        //1번 사람 주사위 버튼 활성화
+        function btn1_on() {
+            btn1 = document.getElementById('btn1');
+            btn1.disabled = false;
+        }
+        //1번 사람 주사위 버튼 비활성화
+        function btn1_off() {
+            btn1 = document.getElementById('btn1');
+            btn1.disabled = 'disabled';
+        }
+        //2번 사람 주사위 버튼 활성화
+        function btn2_on() {
+            btn2 = document.getElementById('btn2');
+            btn2.disabled = false;
+        }
+        //2번 사람 주사위 버튼 비활성화
+        function btn2_off() {
+            btn2 = document.getElementById('btn2');
+            btn2.disabled = 'disabled';
+        }
+        function field() {
+            var image = new Image();
+
+            image.addEventListener('load', function () {
+                context = document.getElementById('canvas2').getContext('2d');
+
+                context.drawImage(image, 0, 0);
+                context.fillStyle = "#0000ff";
+                context.beginPath();
+                context.arc(25, 12, 4, 0, Math.PI * 2, true);
+                context.closePath();
+                context.fill();
+                context.fillStyle = "#ff0000";
+                context.beginPath();
+                context.arc(25, 38, 4, 0, Math.PI * 2, true);
+                context.closePath();
+                context.fill();
+            }, false);
+
+            document.f5.money1.value = num1money;
+            document.f5.money2.value = num2money;
+            
+            document.item.player1.value = "Player1 -> 파란색";
+            document.item.player2.value = "Player2 -> 빨간색";
+
+            btn3_off();
+            btn4_off();
+            btn5_off();
+            btn6_off();
+            btn7_off();
+            btn8_off();
+            btn9_off();
+
+            image.src = "field.png";
+
+
+        }
+        //아이템의 목록을 명시하기 위한 함수
+        function item(choice) {
+            list[0] = "2칸 뒤로 이동";
+            list[1] = "3칸 앞으로 이동";
+            list[2] = "자리 바꾸기";
+            list[3] = "5칸 앞으로 이동";
+            list[4] = "3칸 뒤로 이동";
+
+            if (site == 2 || site == 6) {
+                document.f5.text.value = list[0];
+                if (choice == 1) {
+                    tempNum = 1;
+                    tempItem = 1;
+                } else {
+                    tempNum = 2;
+                    tempItem = 1;
+                }
+                btn3_on();
+            } else if (site == 12 || site == 19) {
+                document.f5.text.value = list[1];
+                if (choice == 1) {
+                    tempNum = 1;
+                    tempItem = 2;
+                } else {
+                    tempNum = 2;
+                    tempItem = 2;
+                }
+                btn3_on();
+            } else if (site == 18 || site == 26) {
+                document.f5.text.value = list[2];
+                if (choice == 1) {
+                    tempNum = 1;
+                    tempItem = 3;
+                } else {
+                    tempNum = 2;
+                    tempItem = 3;
+                }
+                btn3_on();
+            } else if (site == 1 || site == 24) {
+                document.f5.text.value = list[3];
+                if (choice == 1) {
+                    tempNum = 1;
+                    tempItem = 4;
+                } else {
+                    tempNum = 2;
+                    tempItem = 4;
+                }
+                btn3_on();
+            } else if (site == 8 || site == 30) {
+                document.f5.text.value = list[4];
+                if (choice == 1) {
+                    tempNum = 1;
+                    tempItem = 5;
+                } else {
+                    tempNum = 2;
+                    tempItem = 5;
+                }
+                btn3_on();
+            } else {
+                tempNum = 0;
+                tempItem = 0;
+                document.f5.text.value = "없음";
+                btn3_off();
+            }
+        }
+        //아이템을 실행하기 위한 함수
+        function itemExecute(n) {
+            if(n == 0) {
+                if(choice == 1) {
+                    num1 = num1 - 2;
+                    sitenum1 = num1 % 32;
+                } else if(choice == 2) {
+                    num2 = num2 - 2;
+                    sitenum2 = num2 % 32;
+                } else {
+
+                }
+            } else if(n == 1) {
+                if (choice == 1) {
+                    num1 = num1 + 3;
+                    sitenum1 = num1 % 32;
+                } else if (choice == 2) {
+                    num2 = num2 + 3;
+                    sitenum2 = num2 % 32;
+                } else {
+
+                }
+            } else if(n == 2) {
+                if (choice == 1 || choice == 2) {
+                    tempNum1 = num1;
+                    tempSitenum1 = sitenum1;
+                    tempNum2 = num2;
+                    tempSitenum2 = sitenum2;
+
+                    num1 = tempNum2;
+                    sitenum1 = tempSitenum2;
+                    num2 = tempNum1;
+                    sitenum2 = tempSitenum1;
+                } else {
+
+                }
+            } else if(n == 3) {
+                if (choice == 1) {
+                    num1 = num1 + 5;
+                    sitenum1 = num1 % 32;
+                } else if (choice == 2) {
+                    num2 = num2 + 5;
+                    sitenum2 = num2 % 32;
+                } else {
+
+                }
+            } else if(n == 4) {
+                if (choice == 1) {
+                    num1 = num1 - 3;
+                    sitenum1 = num1 % 32;
+                } else if (choice == 2) {
+                    num2 = num2 - 3;
+                    sitenum2 = num2 % 32;
+                } else {
+
+                }
+            } else {
+
+            }
+        }
+        //아이템 저장을 위한 함수
+        function pick() {
+            var set = confirm('저장하시겠습니까?');
+
+            btn3_off();
+            if (set == true) {
+                btn4_on();
+                btn5_on();
+                btn6_on();
+            } else {
+                btn4_off();
+                btn5_off();
+                btn6_off();
+            }
+        }
+        //저장된 아이템 목록 보이기
+        function show(choice) {
+            if(choice == 1) {
+                document.item.item1.value = real[choice - 1][0];
+                document.item.item2.value = real[choice - 1][1];
+                document.item.item3.value = real[choice - 1][2];
+            } else {
+                document.item.item1.value = real[choice - 1][0];
+                document.item.item2.value = real[choice - 1][1];
+                document.item.item3.value = real[choice - 1][2];
+            }
+        }
+        //아이템 존재 여부
+        function realItem(choice) {
+            btn7_off();
+            btn8_off();
+            btn9_off();
+
+            if (real[choice - 1][0] != "") {
+                btn7_on(choice);
+            }
+            if (real[choice - 1][1] != "") {
+                btn8_on(choice);
+            }
+            if (real[choice - 1][2] != "") {
+                btn9_on(choice);
+            }
+        }
+        //1번 칸에 아이템 저장
+        function save1() {
+            btn4_off();
+            btn5_off();
+            btn6_off();
+            btn7_on(choice);
+            if (tempNum == 1) {
+                for(var i = 1; i < 6; i++) {
+                    if(tempItem == i) {
+                        a[0] = tempNum;
+                        b[0] = tempItem;
+                        real[0][0] = list[tempItem - 1];
+                    }
+                }
+            } else if(tempNum == 2) {
+                for (var i = 1; i < 6; i++) {
+                    if (tempItem == i) {
+                        a[1] = tempNum;
+                        a[1] = tempItem;
+                        real[1][0] = list[tempItem - 1];
+                    }
+                }
+            } else {
+
+            }
+            show(choice);
+        }
+        //2번 칸에 아이템 저장
+        function save2() {
+            btn4_off();
+            btn5_off();
+            btn6_off();
+            btn8_on(choice);
+            if (tempNum == 1) {
+                for (var i = 1; i < 6; i++) {
+                    if (tempItem == i) {
+                        a[2] = tempNum;
+                        b[2] = tempItem;
+                        real[0][1] = list[tempItem - 1];
+                    }
+                }
+            } else if(tempNum == 2) {
+                for (var i = 1; i < 6; i++) {
+                    if (tempItem == i) {
+                        a[3] = tempNum;
+                        b[3] = tempItem;
+                        real[1][1] = list[tempItem - 1];
+                    }
+                }
+            } else {
+
+            }
+            show(choice);
+        }
+        //3번 칸에 아이템 저장
+        function save3() {
+            btn4_off();
+            btn5_off();
+            btn6_off();
+            btn9_on(choice);
+            if (tempNum == 1) {
+                for (var i = 1; i < 6; i++) {
+                    if (tempItem == i) 
+                    {
+                        a[4] = tempNum;
+                        b[4] = tempItem;
+                        real[0][2] = list[tempItem - 1];
+                    }
+                }                
+            } else if(tempNum == 2) {
+                for (var i = 1; i < 6; i++) {
+                    if (tempItem == i) {
+                        a[5] = tempNum;
+                        b[5] = tempItem;
+                        real[1][2] = list[tempItem - 1];
+                    }
+                }                
+            } else {
+
+            }
+            show(choice);
+        }
+        //1번 칸의 아이템 사용
+        function use1() {
+            btn7_off();
+            if(choice == 1) {
+                for(var i = 0; i < 5; i++) {
+                    if(real[0][0] == list[i]) {
+                        itemExecute(i);
+                    }
+                }
+                a[0] = 0;
+                b[0] = 0;
+                real[0][0] = "";
+                document.item.item1.value = "";
+            } else if (choice == 2) {
+                for (var i = 0; i < 5; i++) {
+                    if (real[1][0] == list[i]) {
+                        itemExecute(i);
+                    }
+                }
+                a[1] = 0;
+                b[1] = 0;
+                real[1][0] = "";
+                document.item.item1.value = "";
+            } else {
+
+            }
+            document.f3.number3.value = sitenum1 + " / " + num1 + " / " + (Math.floor(num1 / 32) + 1) + "바퀴 째";
+            document.f4.number4.value = sitenum2 + " / " + num2 + " / " + (Math.floor(num2 / 32) + 1) + "바퀴 째";
+            clearAndDraw1();
+            clearAndDraw2();
+        }
+        //2번 칸의 아이템 사용
+        function use2() {
+            btn8_off();
+            if (choice == 1) {
+                for (var i = 0; i < 5; i++) {
+                    if (real[0][1] == list[i]) {
+                        itemExecute(i);
+                    }
+                }
+                a[2] = 0;
+                b[2] = 0;
+                real[0][1] = "";
+                document.item.item2.value = "";
+            } else if (choice == 2) {
+                for (var i = 0; i < 5; i++) {
+                    if (real[1][1] == list[i]) {
+                        itemExecute(i);
+                    }
+                }
+                a[3] = 0;
+                b[3] = 0;
+                real[1][1] = "";
+                document.item.item2.value = "";
+            } else {
+
+            }
+            document.f3.number3.value = sitenum1 + " / " + num1 + " / " + (Math.floor(num1 / 32) + 1) + "바퀴 째";
+            document.f4.number4.value = sitenum2 + " / " + num2 + " / " + (Math.floor(num2 / 32) + 1) + "바퀴 째";
+            clearAndDraw1();
+            clearAndDraw2();
+        }
+        //3번 칸의 아이템 사용
+        function use3() {
+            btn9_off();
+            if (choice == 1) {
+                for (var i = 0; i < 5; i++) {
+                    if (real[0][2] == list[i]) {
+                        itemExecute(i);
+                    }
+                }
+                a[4] = 0;
+                b[4] = 0;
+                real[0][2] = ""; 
+                document.item.item3.value = "";
+            } else if (choice == 2) {
+                for (var i = 0; i < 5; i++) {
+                    if (real[1][2] == list[i]) {
+                        itemExecute(i);
+                    }
+                }
+                a[5] = 0;
+                b[5] = 0;
+                real[1][2] = ""; 
+                document.item.item3.value = "";
+            } else {
+
+            }
+            document.f3.number3.value = sitenum1 + " / " + num1 + " / " + (Math.floor(num1 / 32) + 1) + "바퀴 째";
+            document.f4.number4.value = sitenum2 + " / " + num2 + " / " + (Math.floor(num2 / 32) + 1) + "바퀴 째";
+            clearAndDraw1();
+            clearAndDraw2();
+        }
+        //아이템 고르기 버튼 활성화
+        function btn3_on() {
+            btn3 = document.getElementById('btn3');
+            btn3.disabled = false;
+        }
+        //아이템 고르기 버튼 비활성화
+        function btn3_off() {
+            btn3 = document.getElementById('btn3');
+            btn3.disabled = 'disabled';
+        }
+        //1번 칸의 저장 버튼 활성화
+        function btn4_on() {
+            btn4 = document.getElementById('btn4');
+            btn4.disabled = false;
+        }
+        //1번 칸의 저장 버튼 비활성화
+        function btn4_off() {
+            btn4 = document.getElementById('btn4');
+            btn4.disabled = 'disabled';
+        }
+        //2번 칸의 저장 버튼 활성화
+        function btn5_on() {
+            btn5 = document.getElementById('btn5');
+            btn5.disabled = false;
+        }
+        //2번 칸의 저장 버튼 비활성화
+        function btn5_off() {
+            btn5 = document.getElementById('btn5');
+            btn5.disabled = 'disabled';
+        }
+        //3번 칸의 저장 버튼 활성화
+        function btn6_on() {
+            btn6 = document.getElementById('btn6');
+            btn6.disabled = false;
+        }
+        //3번 칸의 저장 버튼 비활성화
+        function btn6_off() {
+            btn6 = document.getElementById('btn6');
+            btn6.disabled = 'disabled';
+        }
+        //1번 칸의 아이템 사용 버튼 활성화
+        function btn7_on(choice) {
+            btn7 = document.getElementById('btn7');
+            btn7.disabled = false;
+        }
+        //1번 칸의 아이템 사용 버튼 비활성화
+        function btn7_off() {
+            btn7 = document.getElementById('btn7');
+            btn7.disabled = 'disabled';
+        }
+        //2번 칸의 아이템 사용 버튼 활성화
+        function btn8_on(choice) {
+            btn8 = document.getElementById('btn8');
+            btn8.disabled = false;
+        }
+        //2번 칸의 아이템 사용 버튼 비활성화
+        function btn8_off() {
+            btn8 = document.getElementById('btn8');
+            btn8.disabled = 'disabled';
+        }
+        //3번 칸의 아이템 사용 버튼 활성화
+        function btn9_on(choice) {
+            btn9 = document.getElementById('btn9');
+            btn9.disabled = false;
+        }
+        //3번 칸의 아이템 사용 버튼 비활성화
+        function btn9_off() {
+            btn9 = document.getElementById('btn9');
+            btn9.disabled = 'disabled';
+        }
+        //1번 사람 위치 초기화 시키고 다시 그려주는 함수
+        function clearAndDraw1() {
+            clearsite1p();
+
+            switch (sitenum1) {
+                case 0:
+                    num1x = 25;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 1:
+                    num1x = 75;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 2:
+                    num1x = 125;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 3:
+                    num1x = 175;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 4:
+                    num1x = 225;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 5:
+                    num1x = 275;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 6:
+                    num1x = 325;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 7:
+                    num1x = 375;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 8:
+                    num1x = 425;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 9:
+                    num1x = 475;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 10:
+                    num1x = 525;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 11:
+                    num1x = 575;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 12:
+                    num1x = 625;
+                    num1y = 12;
+                    drawsite1p();
+                    break;
+                case 13:
+                    num1x = 625;
+                    num1y = 62;
+                    drawsite1p();
+                    break;
+                case 14:
+                    num1x = 625;
+                    num1y = 112;
+                    drawsite1p();
+                    break;
+                case 15:
+                    num1x = 625;
+                    num1y = 162;
+                    drawsite1p();
+                    break;
+                case 16:
+                    num1x = 625;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 17:
+                    num1x = 575;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 18:
+                    num1x = 525;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 19:
+                    num1x = 475;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 20:
+                    num1x = 425;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 21:
+                    num1x = 375;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 22:
+                    num1x = 325;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 23:
+                    num1x = 275;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 24:
+                    num1x = 225;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 25:
+                    num1x = 175;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 26:
+                    num1x = 125;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 27:
+                    num1x = 75;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 28:
+                    num1x = 25;
+                    num1y = 212;
+                    drawsite1p();
+                    break;
+                case 29:
+                    num1x = 25;
+                    num1y = 162;
+                    drawsite1p();
+                    break;
+                case 30:
+                    num1x = 25;
+                    num1y = 112;
+                    drawsite1p();
+                    break;
+                case 31:
+                    num1x = 25;
+                    num1y = 62;
+                    drawsite1p();
+                    break;
+            }
+        }
+        //2번 사람 위치 초기화 시키고 다시 그려주는 함수
+        function clearAndDraw2() {
+            clearsite2p();
+
+            switch (sitenum2) {
+                case 0:
+                    num2x = 25;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 1:
+                    num2x = 75;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 2:
+                    num2x = 125;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 3:
+                    num2x = 175;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 4:
+                    num2x = 225;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 5:
+                    num2x = 275;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 6:
+                    num2x = 325;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 7:
+                    num2x = 375;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 8:
+                    num2x = 425;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 9:
+                    num2x = 475;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 10:
+                    num2x = 525;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 11:
+                    num2x = 575;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 12:
+                    num2x = 625;
+                    num2y = 38;
+                    drawsite2p();
+                    break;
+                case 13:
+                    num2x = 625;
+                    num2y = 88;
+                    drawsite2p();
+                    break;
+                case 14:
+                    num2x = 625;
+                    num2y = 138;
+                    drawsite2p();
+                    break;
+                case 15:
+                    num2x = 625;
+                    num2y = 188;
+                    drawsite2p();
+                    break;
+                case 16:
+                    num2x = 625;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 17:
+                    num2x = 575;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 18:
+                    num2x = 525;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 19:
+                    num2x = 475;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 20:
+                    num2x = 425;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 21:
+                    num2x = 375;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 22:
+                    num2x = 325;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 23:
+                    num2x = 275;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 24:
+                    num2x = 225;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 25:
+                    num2x = 175;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 26:
+                    num2x = 125;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 27:
+                    num2x = 75;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 28:
+                    num2x = 25;
+                    num2y = 238;
+                    drawsite2p();
+                    break;
+                case 29:
+                    num2x = 25;
+                    num2y = 188;
+                    drawsite2p();
+                    break;
+                case 30:
+                    num2x = 25;
+                    num2y = 138;
+                    drawsite2p();
+                    break;
+                case 31:
+                    num2x = 25;
+                    num2y = 88;
+                    drawsite2p();
+                    break;
+            }
+        }
+        function throwdice1() {
+            dice1 = 1 + Math.floor(Math.random() * 6);
+            dx = dicex;
+            dy = dicey;
+            drawface(dice1);
+            dx = dicex + 150;
+            dice2 = 1 + Math.floor(Math.random() * 6);
+            drawface(dice2);
+
+            choice = 1;
+            sitenum1 += (dice1 + dice2);
+            num1 += (dice1 + dice2);
+            sitenum1 = sitenum1 % 32;
+            site = sitenum1;
+            item(1);
+            show(1);
+            document.f1.number1.value = dice1 + dice2;
+            document.f3.number3.value = sitenum1 + " / " + num1 + " / " + (Math.floor(num1 / 32) + 1) + "바퀴 째";
+            money();
+            btn1_off();
+            btn2_on();
+            realItem(1);
+            clearAndDraw1();
+            clearAndDraw2();
+        }
+        function throwdice2() {
+            dice1 = 1 + Math.floor(Math.random() * 6);
+            dx = dicex;
+            dy = dicey;
+            drawface(dice1);
+            dx = dicex + 150;
+            dice2 = 1 + Math.floor(Math.random() * 6);
+            drawface(dice2);
+
+            choice = 2;
+            sitenum2 += (dice1 + dice2);
+            num2 += (dice1 + dice2);
+            sitenum2 = sitenum2 % 32;
+            site = sitenum2;
+            item(2);
+            show(2);
+            document.f2.number2.value = dice1 + dice2;
+            document.f4.number4.value = sitenum2 + " / " + num2 + " / " + (Math.floor(num2 / 32) + 1) + "바퀴 째";
+            money();
+            btn1_on();
+            btn2_off();
+            realItem(2);
+            clearAndDraw1();
+            clearAndDraw2();
+        }
+        function drawsite1p() {
+            ctx2 = document.getElementById('canvas2').getContext('2d');
+            ctx2.fillStyle = "#0000ff";
+            ctx2.beginPath();
+            ctx2.arc(num1x, num1y, 4, 0, Math.PI * 2, true);
+            ctx2.closePath();
+            ctx2.fill();
+        }
+        function drawsite2p() {
+            ctx2 = document.getElementById('canvas2').getContext('2d');
+            ctx2.fillStyle = "#ff0000";
+            ctx2.beginPath();
+            ctx2.arc(num2x, num2y, 4, 0, Math.PI * 2, true);
+            ctx2.closePath();
+            ctx2.fill();
+        }
+        // 1번 사용자 위치 클리어 위함
+        function clearsite1p() {
+            context.clearRect(7, 7, 36, 18); // 0번 위치 클리어
+            context.clearRect(57, 7, 36, 18); // 1번 위치 클리어
+            context.clearRect(107, 7, 36, 18); // 2번 위치 클리어
+            context.clearRect(157, 7, 36, 18); // 3번 위치 클리어
+            context.clearRect(207, 7, 36, 18); // 4번 위치 클리어
+            context.clearRect(257, 7, 36, 18); // 5번 위치 클리어
+            context.clearRect(307, 7, 36, 18); // 6번 위치 클리어
+            context.clearRect(357, 7, 36, 18); // 7번 위치 클리어
+            context.clearRect(407, 7, 36, 18); // 8번 위치 클리어
+            context.clearRect(457, 7, 36, 18); // 9번 위치 클리어
+            context.clearRect(507, 7, 36, 18); // 10번 위치 클리어
+            context.clearRect(557, 7, 36, 18); // 11번 위치 클리어
+            context.clearRect(607, 7, 36, 18); // 12번 위치 클리어
+            context.clearRect(607, 57, 36, 18); // 13번 위치 클리어
+            context.clearRect(607, 107, 36, 18); // 14번 위치 클리어
+            context.clearRect(607, 157, 36, 18); // 15번 위치 클리어
+            context.clearRect(607, 207, 36, 18); // 16번 위치 클리어
+            context.clearRect(557, 207, 36, 18); // 17번 위치 클리어
+            context.clearRect(507, 207, 36, 18); // 18번 위치 클리어
+            context.clearRect(457, 207, 36, 18); // 19번 위치 클리어
+            context.clearRect(407, 207, 36, 18); // 20번 위치 클리어
+            context.clearRect(357, 207, 36, 18); // 21번 위치 클리어
+            context.clearRect(307, 207, 36, 18); // 22번 위치 클리어
+            context.clearRect(257, 207, 36, 18); // 23번 위치 클리어
+            context.clearRect(207, 207, 36, 18); // 24번 위치 클리어
+            context.clearRect(157, 207, 36, 18); // 25번 위치 클리어
+            context.clearRect(107, 207, 36, 18); // 26번 위치 클리어
+            context.clearRect(57, 207, 36, 18); // 27번 위치 클리어
+            context.clearRect(7, 207, 36, 18); // 28번 위치 클리어
+            context.clearRect(7, 157, 36, 18); // 29번 위치 클리어
+            context.clearRect(7, 107, 36, 18); // 30번 위치 클리어
+            context.clearRect(7, 57, 36, 18); // 31번 위치 클리어
+        }
+        // 2번 사용자 위치 클리어 위함
+        function clearsite2p() {
+            context.clearRect(7, 25, 36, 18); // 0번 위치 클리어
+            context.clearRect(57, 25, 36, 18); // 1번 위치 클리어
+            context.clearRect(107, 25, 36, 18); // 2번 위치 클리어
+            context.clearRect(157, 25, 36, 18); // 3번 위치 클리어
+            context.clearRect(207, 25, 36, 18); // 4번 위치 클리어
+            context.clearRect(257, 25, 36, 18); // 5번 위치 클리어
+            context.clearRect(307, 25, 36, 18); // 6번 위치 클리어
+            context.clearRect(357, 25, 36, 18); // 7번 위치 클리어
+            context.clearRect(407, 25, 36, 18); // 8번 위치 클리어
+            context.clearRect(457, 25, 36, 18); // 9번 위치 클리어
+            context.clearRect(507, 25, 36, 18); // 10번 위치 클리어
+            context.clearRect(557, 25, 36, 18); // 11번 위치 클리어
+            context.clearRect(607, 25, 36, 18); // 12번 위치 클리어
+            context.clearRect(607, 75, 36, 18); // 13번 위치 클리어
+            context.clearRect(607, 125, 36, 18); // 14번 위치 클리어
+            context.clearRect(607, 175, 36, 18); // 15번 위치 클리어
+            context.clearRect(607, 225, 36, 18); // 16번 위치 클리어
+            context.clearRect(557, 225, 36, 18); // 17번 위치 클리어
+            context.clearRect(507, 225, 36, 18); // 18번 위치 클리어
+            context.clearRect(457, 225, 36, 18); // 19번 위치 클리어
+            context.clearRect(407, 225, 36, 18); // 20번 위치 클리어
+            context.clearRect(357, 225, 36, 18); // 21번 위치 클리어
+            context.clearRect(307, 225, 36, 18); // 22번 위치 클리어
+            context.clearRect(257, 225, 36, 18); // 23번 위치 클리어
+            context.clearRect(207, 225, 36, 18); // 24번 위치 클리어
+            context.clearRect(157, 225, 36, 18); // 25번 위치 클리어
+            context.clearRect(107, 225, 36, 18); // 26번 위치 클리어
+            context.clearRect(57, 225, 36, 18); // 27번 위치 클리어
+            context.clearRect(7, 225, 36, 18); // 28번 위치 클리어
+            context.clearRect(7, 175, 36, 18); // 29번 위치 클리어
+            context.clearRect(7, 125, 36, 18); // 30번 위치 클리어
+            context.clearRect(7, 75, 36, 18); // 31번 위치 클리어
+        }
+        function drawface(n) {
+            ctx = document.getElementById('canvas').getContext('2d');
+            ctx.lineWidth = 5;
+            ctx.clearRect(dx, dy, dicewidth, diceheight);
+            ctx.strokeRect(dx, dy, dicewidth, diceheight);
+
+            var dotx;
+            var doty;
+            ctx.fillStyle = "#009966";
+            switch (n) {
+                case 1:
+                    draw1();
+                    break;
+                case 2:
+                    draw2();
+                    break;
+                case 3:
+                    draw2();
+                    draw1();
+                    break;
+                case 4:
+                    draw4();
+                    break;
+                case 5:
+                    draw4();
+                    draw1();
+                    break;
+                case 6:
+                    draw4();
+                    draw2mid();
+                    break;
+            }
+        }
+        function draw1() {
+            var dotx;
+            var doty;
+            ctx.beginPath();
+            dotx = dx + 0.5 * dicewidth;
+            doty = dy + 0.5 * diceheight;
+            ctx.arc(dotx, doty, dotrad, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+        }
+        function draw2() {
+            var dotx;
+            var doty;
+            ctx.beginPath();
+            dotx = dx + 3 * dotrad;
+            doty = dy + 3 * dotrad;
+            ctx.arc(dotx, doty, dotrad, 0, Math.PI * 2, true);
+            dotx = dx + dicewidth - 3 * dotrad;
+            doty = dy + diceheight - 3 * dotrad;
+            ctx.arc(dotx, doty, dotrad, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+        }
+        function draw4() {
+            var dotx;
+            var doty;
+            ctx.beginPath();
+            dotx = dx + 3 * dotrad;
+            doty = dy + 3 * dotrad;
+            ctx.arc(dotx, doty, dotrad, 0, Math.PI * 2, true);
+            dotx = dx + dicewidth - 3 * dotrad;
+            doty = dy + diceheight - 3 * dotrad;
+            ctx.arc(dotx, doty, dotrad, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            dotx = dx + 3 * dotrad;
+            doty = dy + diceheight - 3 * dotrad;
+            ctx.arc(dotx, doty, dotrad, 0, Math.PI * 2, true);
+            dotx = dx + dicewidth - 3 * dotrad;
+            doty = dy + 3 * dotrad;
+            ctx.arc(dotx, doty, dotrad, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+        }
+        function draw2mid() {
+            var dotx;
+            var doty;
+            ctx.beginPath();
+            dotx = dx + 3 * dotrad;
+            doty = dy + 0.5 * diceheight;
+            ctx.arc(dotx, doty, dotrad, 0, Math.PI * 2, true);
+            dotx = dx + dicewidth - 3 * dotrad;
+            doty = dy + 0.5 * diceheight;
+            ctx.arc(dotx, doty, dotrad, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+    </script>
+    <style>
+        nav {
+            float: left;
+            width: 350px;
+            height: 200px;
+            background: #ffff00;
+            padding: 10px;
+        }
+
+        article {
+            float: left;
+            width: 280px;
+            padding: 10px;
+            height: 250px;
+        }
+
+        section:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        footer {
+            float: left;
+            width: 650px;
+            height: 280px;
+        }
+
+        #mission {
+            float: left;
+            width: 280px;
+            padding-left: 20px;
+            padding-top: 0px;
+            height: 250px;
+        }
+    </style>
+</head>
+
+<body onload="field();">
+    <header>
+        주사위를 던져보자!
+        <form name="item">
+            <input name="item1" value="" disabled />
+            <input name="item2" value="" disabled />
+            <input name="item3" value="" disabled />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <input name="player1" value="" disabled />
+            <input name="player2" value="" disabled />
+        </form>
+    </header>
+
+    <section>
+        <nav>
+            <canvas id="canvas" width="350" height="200"></canvas>
+            <br /><br />
+            <button id="btn1" onClick="throwdice1();">1번 사람 주사위 던지기</button>
+            <button id="btn2" onClick="throwdice2();">2번 사람 주사위 던지기</button>
+        </nav>
+        <article>
+            <h3>1번 사람이 던져서 나온 숫자 : </h3>
+            <form name="f1">
+                <input name="number1" value="" disabled />
+            </form>
+            <h3>2번 사람이 던져서 나온 숫자 : </h3>
+            <form name="f2">
+                <input name="number2" value="" disabled />
+            </form> <br />
+
+        </article>
+        <article>
+            <form name="f3">
+                <h3>1번 사람의 위치 : </h3>
+                <input name="number3" value="" disabled />
+            </form>
+            <form name="f4">
+                <h3>2번 사람의 위치 : </h3>
+                <input name="number4" value="" disabled />
+            </form>
+        </article>
+
+    </section>
+
+    <footer>
+        <canvas id="canvas2" width="650" height="250"></canvas>
+        <button id="btn3" onClick="pick();">아이템 고르기</button>
+        <button id="btn4" onClick="save1();">1번에 저장</button>
+        <button id="btn5" onClick="save2();">2번에 저장</button>
+        <button id="btn6" onClick="save3();">3번에 저장</button>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <button id="btn7" onClick="use1();">1번 사용</button>
+        <button id="btn8" onClick="use2();">2번 사용</button>
+        <button id="btn9" onClick="use3();">3번 사용</button>
+    </footer>
+    <article id="mission">
+        <form name="f5">
+            <h5>걸린 아이템 : </h5>
+            <input name="text" value="" disabled />
+            <h5>1번 사람의 현재 금액 : </h5>
+            <input name="money1" value="" disabled>
+            <h5>2번 사람의 현재 금액 : </h5>
+            <input name="money2" value="" disabled>
+        </form>
+    </article>
+
+</body>
+
+</html>
