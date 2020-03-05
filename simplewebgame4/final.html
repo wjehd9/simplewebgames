@@ -1,0 +1,403 @@
+<html>
+
+<head>
+    <title>Final 게임</title>
+    <script>
+        var score = new Array();
+        score = [0, 0, 0, 0, 0];
+        var strScore, strSelect, strCount;
+        var ctx;
+        var personx = 50, persony = 380;
+        var ballx, bally;
+        var startsitex, startsitey; // 공이 출발하는 시점의 좌표이다.
+        var angle = 0;
+        var time = new Date(); // 시간에 대한 변수를 나타내기 위한 변수이다.
+        var tempYear, tempMonth, tempDay, tempHours, tempMinutes, tempSeconds, tempMilliseconds; // 시간을 각 요소별로 나타내기 위한 변수
+        var startTime = 0; // space를 뗀 시점을 나타내기 위함
+        var now;
+        var doTime = 0; // 도착하기까지 걸린 시간 나타내기 위함
+        var v0, gravity = 9.8; // 실제 움직일 때의 속도, 중력이다.
+        var w, cycle = 0, t = 0.1, accel, tempv;
+        var maxlengthtime;
+        var tempan = 0, tempcycle = 0;
+        var movetemp, processtemp, checktemp, successtemp;
+        var ballcheck = 0;
+        var a = new Array();
+        a[0] = 200 + Math.floor(Math.random() * 450);
+        a[1] = 200 + Math.floor(Math.random() * 450);
+        a[2] = 200 + Math.floor(Math.random() * 450);
+        a[3] = 200 + Math.floor(Math.random() * 450);
+        a[4] = 550;
+        a[5] = 200 + Math.floor(Math.random() * 450);
+        a[6] = 200 + Math.floor(Math.random() * 450);
+        var b = new Array();
+        b[0] = 30 + Math.floor(Math.random() * 350);
+        b[1] = 30 + Math.floor(Math.random() * 350);
+        b[2] = 30 + Math.floor(Math.random() * 350);
+        b[3] = 30 + Math.floor(Math.random() * 350);
+        b[4] = 30 + Math.floor(Math.random() * 350);
+        b[5] = 30 + Math.floor(Math.random() * 350);
+        b[6] = 30 + Math.floor(Math.random() * 350);
+        var band = new Array();
+        band[0] = 1.5;
+        band[1] = -1.5;
+        band[2] = 1.5;
+        band[3] = -1.5;
+        band[4] = 1.5;
+        band[5] = -1.5;
+        band[6] = 1.5;
+        var distance = new Array();
+        distance = ["", "", "", "", "", "", ""];
+        var select = 0;
+
+        function init() {
+            ctx = document.getElementById('canvas').getContext('2d');
+
+            setInterval(field, 20);
+            setInterval(moveperson, 20);
+            movetemp = setInterval(moveball, 20);
+            setInterval(calculate, 20);
+            processtemp = setInterval(processtime, 1);
+            createobject();
+            setInterval(createobject, 20);
+            moveobject();
+            setInterval(moveobject, 20);
+            discheck();
+            checktemp = setInterval(discheck, 20);
+            successcheck();
+            successtemp = setInterval(successcheck, 20);
+            countRead();
+            scoreRead();
+            localStorage.setItem("many", 0);
+            localStorage.setItem("select", 0);
+            localStorage.setItem("count", 0);
+        }
+
+        function field() {
+            ctx.beginPath();
+            var field = new Image();
+            field.src = "fieldfinal.png"
+            ctx.drawImage(field, 0, 0);
+            ctx.closePath();
+        }
+
+        function calculate() {
+            // 포물선 운동에서 얻을 수 있는 최대 시간에 대한 계산
+            var sintemp = Math.sin(Math.PI / 180 * angle);
+            maxlengthtime = 2 * v0 * Math.abs(sintemp) / gravity;
+            // 원심력에 대한 계산
+            w = cycle / t;
+            accel = 20 * Math.pow(w, 2);
+            tempv = accel * t;
+
+            for (var i = 0; i < 7; i++) {
+                dis[i] = Math.sqrt(Math.pow(a[i] - ballx, 2) + Math.pow(b[i] - bally, 2)).toFixed(2);
+            }
+        }
+
+        function discheck() {
+            for (var i = 0; i < 7; i++) {
+                if (dis[i] <= 20) {
+                    alert("아웃입니다!!");
+                    countAdd();
+                    clearInterval(movetemp);
+                    clearInterval(processtemp);
+                    clearInterval(checktemp);
+                    location.reload();
+                }
+            }
+        }
+
+        function successcheck() {
+            if (ballcheck == 1) {
+                alert("성공입니다.");
+                if (startsitex <= 200) {
+                    alert("3점 슛입니다.");
+                    select = 3;
+                    scoreAdd();
+                } else if (startsitex <= 400) {
+                    alert("2점 슛입니다.");
+                    select = 2;
+                    scoreAdd();
+                } else if (startsitex <= 500) {
+                    alert("1점 슛입니다.");
+                    select = 1;
+                    scoreAdd();
+                }
+                countAdd();
+                clearInterval(movetemp);
+                clearInterval(processtemp);
+                clearInterval(checktemp);
+                clearInterval(successtemp);
+                location.reload();
+            }
+        }
+
+        function createobject() {
+            ctx.fillStyle = "#ff0000";
+            ctx.fillRect(670, 200, 100, 20);
+        }
+
+        function moveobject() {
+            for (var i = 0; i < 7; i++) {
+                moveobjectcheck(i);
+                ctx.beginPath();
+                ctx.fillStyle = "#000000";
+                ctx.arc(a[i], b[i], 10, 0, Math.PI * 2, true);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        function moveobjectcheck(i) {
+            var checky = b[i] + band[i];
+
+            if (checky < 10) {
+                band[i] = -band[i];
+                checky = 10;
+            }
+
+            if (checky > 440) {
+                band[i] = -band[i];
+                checky = 440;
+            }
+
+            b[i] = checky;
+        }
+
+        function moveperson() {
+            check();
+            ctx.beginPath();
+            var person = new Image();
+            person.src = "person.png";
+            ctx.drawImage(person, personx, persony);
+            ctx.closePath();
+        }
+
+        function moveball() {
+            v0 = tempv / 40;
+            document.getElementById('v0').innerHTML = "공의 초기 속력은 : " + v0.toFixed(2);
+
+            // 공을 던지고 난 후의 움직임을 나타낸다.
+            if (startTime != 0) {                
+                flyball();                
+            } else {
+                ballx = personx + 50 + 20 * Math.cos(Math.PI / 180 * angle);
+                bally = persony - 20 * Math.sin(Math.PI / 180 * angle);
+                startsitex = ballx;
+                startsitey = bally;
+            }
+            ctx.beginPath();
+            ctx.fillStyle = "#ff3300";
+            ctx.arc(ballx, bally, 10, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.closePath();
+
+            if (ballx < 0 || ballx > 800 || bally < 0 || bally > 450) {
+                alert("아웃입니다!!");
+                countAdd();
+                clearInterval(movetemp);
+                clearInterval(processtemp);
+                location.reload();
+            }
+        }
+
+        function flyball() {
+            // 포물선 운동을 통해 공의 움직임을 표시하기 위한 좌표 계산
+            ballx = startsitex + v0 * Math.cos(Math.PI / 180 * angle) * doTime;
+            bally = startsitey - v0 * Math.sin(Math.PI / 180 * angle) * doTime + gravity * Math.pow(doTime, 2) / 2;
+
+            if (ballx > 665 && ballx < 775 && bally > 190 && bally < 200) {
+                ballcheck = 1;
+            }
+            if(bally > 440) {
+                alert("실패입니다!!");
+                countAdd();
+                clearInterval(movetemp);
+                clearInterval(processtemp);
+                location.reload();
+            }
+        }
+
+        function processtime() {
+            now = new Date();
+            tempYear = now.getFullYear();
+            tempMonth = now.getMonth();
+            tempDay = now.getDay() + 23;
+            tempHours = now.getHours();
+            tempMinutes = now.getMinutes();
+            tempSeconds = now.getSeconds();
+            tempMilliseconds = now.getMilliseconds();
+            now = new Date(tempYear, tempMonth, tempDay, tempHours, tempMinutes, tempSeconds, tempMilliseconds);
+            doTime = (now - startTime) / 1000;
+        }
+
+        function check() {
+            if (personx < 0) {
+                personx = 0;
+            }
+            if (personx > 430) {
+                personx = 430;
+            }
+            if (persony > 380) {
+                persony = 380;
+            }
+        }
+
+        document.onkeyup = function (e) {
+            var x = event.which || event.charCode;
+            if (x == 32) {
+                var time = new Date();
+                tempYear = time.getFullYear();
+                tempMonth = time.getMonth();
+                tempDay = time.getDay() + 23;
+                tempHours = time.getHours();
+                tempMinutes = time.getMinutes();
+                tempSeconds = time.getSeconds();
+                tempMilliseconds = time.getMilliseconds();
+                startTime = new Date(tempYear, tempMonth, tempDay, tempHours, tempMinutes, tempSeconds, tempMilliseconds);
+            }
+        };
+
+        document.onkeydown = function (event) {
+            var x = event.which || event.charCode;
+            if (x == 32) {
+                var tempangle = angle + tempcycle;
+                if (tempcycle < 7) {
+                    tempcycle = tempcycle + 0.1;
+                    if (tempangle > 90) {
+                        tempcycle = -tempcycle;
+                        tempangle = 90;
+                    }
+                    if (tempangle < 0) {
+                        tempcycle = -tempcycle;
+                        tempangle = 0;
+                    }
+                } else if (tempcycle > 7) {
+                    tempcycle = 7;
+                    if (tempangle >= 90) {
+                        tempcycle = -tempcycle;
+                        tempangle = 90;
+                    }
+                    if (tempangle < 0) {
+                        tempcycle = -tempcycle;
+                        tempangle = 0;
+                    }
+                }
+                if (cycle < 9) {
+                    cycle = cycle + 0.04;
+                } else if (cycle > 9) {
+                    cycle = 9;
+                }
+                angle = tempangle;
+            }
+            switch (event.key) {
+                case 'ArrowLeft':
+                    // left arrow
+                    personx -= 20;
+                    break;
+                case 'ArrowRight':
+                    // right arrow
+                    personx += 20;
+                    break;                
+            }
+        };
+
+        function countAdd() {
+            if (typeof (Storage) !== "undefined") {
+                localStorage.setItem("count", 1);
+            }
+        }
+        function countRead() {
+            var strCount = localStorage.getItem("count");
+            score[4] = localStorage.getItem("many5");
+
+            if (score[4] == 'null') {
+                score[4] = strCount;
+            } else if (score[4] != 'null') {
+                score[4] = Number(score[4]) + Number(strCount);
+            }
+
+            localStorage.setItem("many5", score[4]);
+
+            document.getElementById("log5").innerHTML = "총 시도 횟수 : " + localStorage.getItem("many5");
+        }
+
+        function scoreAdd() {
+            if (typeof (Storage) !== "undefined") {
+                // Store;
+                localStorage.setItem("many", 1);
+                localStorage.setItem("select", select);
+            }
+        }
+        function scoreRead() {
+            if (typeof (Storage) !== "undefined") {
+                // Receive
+                var strScore = localStorage.getItem("many");
+                var strSelect = localStorage.getItem("select");
+
+                score[0] = localStorage.getItem("many1");
+                score[1] = localStorage.getItem("many2");
+                score[2] = localStorage.getItem("many3");
+                score[3] = localStorage.getItem("many4");
+
+                for (var i = 0; i < 5; i++) {
+                    if (i > 0 && i < 4) {
+                        if (score[strSelect] == 'null') {
+                            score[strSelect] = strScore;
+                            break;
+                        } else if (score[strSelect] != 'null') {
+                            score[strSelect] = Number(score[strSelect]) + Number(strScore);
+                            break;
+                        }
+                    }
+                }
+
+                score[0] = score[1] * 1 + score[2] * 2 + score[3] * 3;
+
+                localStorage.setItem("many1", score[0]);
+                localStorage.setItem("many2", score[1]);
+                localStorage.setItem("many3", score[2]);
+                localStorage.setItem("many4", score[3]);
+
+                document.getElementById("log1").innerHTML = "총 점수 : " + localStorage.getItem("many1");
+                document.getElementById("log2").innerHTML = "3점 슛 개수 : " + localStorage.getItem("many4");
+                document.getElementById("log3").innerHTML = "2점 슛 개수 : " + localStorage.getItem("many3");
+                document.getElementById("log4").innerHTML = "1점 슛 개수 : " + localStorage.getItem("many2");
+            }
+        }
+    </script>
+    <style>
+        header {
+            width: 820px;
+            height: 470px;
+        }
+
+        #score {
+            position: absolute;
+            float: left;
+            left: 30px;
+            top: 30px;
+            line-height: 8px;
+        }
+    </style>
+</head>
+
+<body onload="init();">
+    <header>
+        <canvas id="canvas" width="800" height="450" style="border:10px solid saddlebrown;"></canvas>
+        <br /><br />
+        <article id="score">
+            <h3><strong>기록 점수</strong></h3>
+            <p id="log1"></p>
+            <p id="log2"></p>
+            <p id="log3"></p>
+            <p id="log4"></p>
+            <p id="log5"></p>
+        </article>
+    </header>
+    <p id="v0"></p>
+    <p id="dis"></p>
+</body>
+
+</html>
