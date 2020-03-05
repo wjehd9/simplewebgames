@@ -1,0 +1,851 @@
+<html>
+
+<head>
+    <title>공 게임</title>
+    <script type="text/javascript">
+
+        var canvasx = 600;
+        var canvasy = 500;
+        var boxx = 20;
+        var boxy = 30;
+        var boxwidth = 550;
+        var boxheight = 450;
+        var ballrad = 10;
+        var ballx = 35;
+        var bally = 470;
+        var ranballrad = 10;
+        var ranballspeed = 5;
+
+        //목표로 하는 공이 구역 내에서 임의로 생성된다.
+        var catchballx = 35 + Math.floor(Math.random() * 520);
+        var catchbally = 45 + Math.floor(Math.random() * 420);
+
+        //1번 랜덤 공의 처음 생성 좌표와 공의 속도를 조절하기 위한 변수이다.
+        var ranball1x = 70 + Math.floor(Math.random() * 450);
+        var ranball1y = 45 + Math.floor(Math.random() * 420);
+        var bandwidth = 1 + Math.floor(Math.random() * ranballspeed);
+        var bandheight = 1 + Math.floor(Math.random() * ranballspeed);
+
+        //2번 랜덤 공의 처음 생성 좌표와 공의 속도를 조절하기 위한 변수이다.
+        var ranball2x = 35 + Math.floor(Math.random() * 520);
+        var ranball2y = 80 + Math.floor(Math.random() * 450);
+        var bandwidth2 = 1 + Math.floor(Math.random() * ranballspeed);
+        var bandheight2 = 1 + Math.floor(Math.random() * ranballspeed);
+
+        //3번 랜덤 공의 처음 생성 좌표와 공의 속도를 조절하기 위한 변수이다.
+        var ranball3x = 70 + Math.floor(Math.random() * 450);
+        var ranball3y = 45 + Math.floor(Math.random() * 420);
+        var bandwidth3 = 1 + Math.floor(Math.random() * ranballspeed);
+        var bandheight3 = 1 + Math.floor(Math.random() * ranballspeed);
+
+        //4번 랜덤 공의 처음 생성 좌표와 공의 속도를 조절하기 위한 변수이다.
+        var ranball4x = 35 + Math.floor(Math.random() * 520);
+        var ranball4y = 80 + Math.floor(Math.random() * 450);
+        var bandwidth4 = 1 + Math.floor(Math.random() * ranballspeed);
+        var bandheight4 = 1 + Math.floor(Math.random() * ranballspeed);
+
+        var ctx;
+
+        var count = 0; // 두 공이 서로 접촉한 횟수
+        var distance; // 플레이어의 공과 목표로 하는 공 사이의 거리
+
+        var randomdis1; // 플레이어의 공과 랜덤한 1번 공 사이의 거리
+        var randomdis2; // 플레이어의 공과 랜덤한 2번 공 사이의 거리
+        var randomdis3; // 플레이어의 공과 랜덤한 3번 공 사이의 거리
+        var ramdomdis4; // 플레이어의 공과 랜덤한 4번 공 사이의 거리
+
+        var angle1; // 랜덤 1번 공과 목표로 하는 공이 현재 이루어져 있는 각도이다.
+        var angle2; // 랜덤 2번 공과 목표로 하는 공이 현재 이루어져 있는 각도이다.
+        var angle3; // 랜덤 3번 공과 목표로 하는 공이 현재 이루어져 있는 각도이다.
+        var angle4; // 랜덤 4번 공과 목표로 하는 공이 현재 이루어져 있는 각도이다.
+
+        var x = new Array(); // 랜덤 공의 x 좌표를 나타내었다.
+        x = ['', '', '', ''];
+        var y = new Array(); // 랜덤 공의 y 좌표를 나타내었다.
+        y = ['', '', '', ''];
+        var width = new Array(); // 랜덤 공의 bandwidth 값들을 나타내었다.
+        width = ['', '', '', ''];
+        var height = new Array(); // 랜덤 공의 bandheight 값들을 나타내었다.
+        height = ['', '', '', ''];
+        var slope = new Array(); // 랜덤 공의 일차함수에 대한 기울기이다.
+        var y_intercept = new Array(); // 랜덤 공의 일차함수에 대한 y절편이다.
+
+        var spotx = new Array(); // 랜덤 공들이 서로 만나는 지점(x좌표)
+        var spoty = new Array(); // 랜덤 공들이 서로 만나는 지점(y좌표)
+
+        var spotangle = new Array(); // 랜덤끼리 만난 지점과 랜덤 공 사이의 각도들을 구성
+
+        //초기 화면 상태를 정의하고, 이벤트 발생을 시킨다.
+        function init() {
+            ctx = document.getElementById('canvas').getContext('2d');
+            ctx.lineWidth = ballrad;
+            moveball();
+            setInterval(moveball, 20);
+            catchball();
+            setInterval(catchball, 20);
+            moveranball1();
+            setInterval(moveranball1, 20);
+            moveranball2();
+            setInterval(moveranball2, 20);
+            moveranball3();
+            setInterval(moveranball3, 20);
+            moveranball4();
+            setInterval(moveranball4, 20);
+            reflexcheck();
+            setInterval(reflexcheck, 20);
+        }
+        //플레이어의 공을 그리고, 움직이게 하기 위한 함수이다.
+        function moveball() {
+            document.site.ballx.value = ballx;
+            document.site.bally.value = bally;
+            var a = ballx - catchballx;
+            var b = bally - catchbally;
+            distance = Math.sqrt(a * a + b * b); // 피타고라스 정리를 이용하여 목표로 하는 두 공 사이의 거리를 나타낸다.
+            randomdis1 = Math.sqrt((ballx - ranball1x) * (ballx - ranball1x) + (bally - ranball1y) * (bally - ranball1y));
+            randomdis2 = Math.sqrt((ballx - ranball2x) * (ballx - ranball2x) + (bally - ranball2y) * (bally - ranball2y));
+            randomdis3 = Math.sqrt((ballx - ranball3x) * (ballx - ranball3x) + (bally - ranball3y) * (bally - ranball3y));
+            randomdis4 = Math.sqrt((ballx - ranball4x) * (ballx - ranball4x) + (bally - ranball4y) * (bally - ranball4y));
+            document.site.distance.value = distance;
+            document.getElementById('ranballrad').innerHTML = "현재 랜덤 공의 반지름 : " + ranballrad;
+            document.getElementById('avoid').innerHTML = "피해야 할 거리 : " + (ballrad + ranballrad);
+            ctx.clearRect(boxx, boxy, boxwidth, boxheight);
+            check();
+            fail();
+            document.site.count.value = count;
+            ctx.beginPath();
+            ctx.fillStyle = "rgb(0,255,0)";
+            ctx.arc(ballx, bally, ballrad, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.strokeRect(boxx, boxy, boxwidth, boxheight);
+        }
+        //플레이어 공의 위치를 검사하게 하는 함수이다.
+        function check() {
+            if (ballx < boxx + 10 + ballrad / 2) {
+                ballx = boxx + 10 + ballrad / 2;
+            }
+            if (ballx > canvasx - 30 - 10 - ballrad / 2) {
+                ballx = canvasx - 30 - 10 - ballrad / 2;
+            }
+            if (bally < boxy + 10 + ballrad / 2) {
+                bally = boxy + 10 + ballrad / 2;
+            }
+            if (bally > canvasy - 20 - 10 - ballrad / 2) {
+                bally = canvasy - 20 - 10 - ballrad / 2;
+            }
+        }
+        //랜덤한 1번 공의 움직임을 나타내기 위한 함수이다.
+        function moveranball1() {
+            moveandcheckran1();
+            ctx.beginPath();
+            ctx.fillStyle = "rgb(255,0,0)";
+            ctx.arc(ranball1x, ranball1y, ranballrad, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.closePath();
+        }
+        //랜덤한 1번 공의 움직임을 검사하기 위한 함수이다.
+        function moveandcheckran1() {
+            var nballx = ranball1x + bandwidth;
+            var nbally = ranball1y + bandheight;
+
+            if (nballx < boxx + 10 + ranballrad) {
+                bandwidth = -bandwidth;
+                nballx = boxx + 10 + ranballrad;
+            }
+            if (nballx > canvasx - boxx - 10 - 10 - ranballrad) {
+                bandwidth = -bandwidth;
+                nballx = canvasx - boxx - 10 - 10 - ranballrad;
+            }
+            if (nbally < boxy + 10 + ranballrad) {
+                bandheight = -bandheight;
+                nbally = boxy + 10 + ranballrad;
+            }
+            if (nbally > canvasy - boxy + 10 - 10 - ranballrad) {
+                bandheight = -bandheight;
+                nbally = canvasy - boxy + 10 - 10 - ranballrad;
+            }
+
+            ranball1x = nballx;
+            ranball1y = nbally;
+
+            var x = catchballx - ranball1x;
+            var y = catchbally - ranball1y;
+
+            angle1 = angle(x, y);
+
+            if (x * x + y * y <= (ranballrad + 10) * (ranballrad + 10)) {
+                ranballmatch(angle1, x, y, 1);
+            }
+        }
+        //랜덤한 2번 공의 움직임을 나타내기 위한 함수이다.
+        function moveranball2() {
+            moveandcheckran2();
+            ctx.beginPath();
+            ctx.fillStyle = "rgb(255,0,0)";
+            ctx.arc(ranball2x, ranball2y, ranballrad, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.closePath();
+        }
+        //랜덤한 2번 공의 움직임을 검사하기 위한 함수이다.
+        function moveandcheckran2() {
+            var nballx = ranball2x + bandwidth2;
+            var nbally = ranball2y + bandheight2;
+
+            if (nballx < boxx + 10 + ranballrad) {
+                bandwidth2 = -bandwidth2;
+                nballx = boxx + 10 + ranballrad;
+            }
+            if (nballx > canvasx - boxx - 10 - 10 - ranballrad) {
+                bandwidth2 = -bandwidth2;
+                nballx = canvasx - boxx - 10 - 10 - ranballrad;
+            }
+            if (nbally < boxy + 10 + ranballrad) {
+                bandheight2 = -bandheight2;
+                nbally = boxy + 10 + ranballrad;
+            }
+            if (nbally > canvasy - boxy + 10 - 10 - ranballrad) {
+                bandheight2 = -bandheight2;
+                nbally = canvasy - boxy + 10 - 10 - ranballrad;
+            }
+
+            ranball2x = nballx;
+            ranball2y = nbally;
+
+            var x = catchballx - ranball2x;
+            var y = catchbally - ranball2y;
+
+            angle2 = angle(x, y);
+
+            if (x * x + y * y <= (ranballrad + 10) * (ranballrad + 10)) {
+                ranballmatch(angle2, x, y, 2);
+            }
+        }
+        //랜덤한 3번 공의 움직임을 나타내기 위한 함수이다.
+        function moveranball3() {
+            moveandcheckran3();
+            ctx.beginPath();
+            ctx.fillStyle = "rgb(255,0,0)";
+            ctx.arc(ranball3x, ranball3y, ranballrad, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.closePath();
+        }
+        //랜덤한 3번 공의 움직임을 검사하기 위한 함수이다.
+        function moveandcheckran3() {
+            var nballx = ranball3x + bandwidth3;
+            var nbally = ranball3y + bandheight3;
+
+            if (nballx < boxx + 10 + ranballrad) {
+                bandwidth3 = -bandwidth3;
+                nballx = boxx + 10 + ranballrad;
+            }
+            if (nballx > canvasx - boxx - 10 - 10 - ranballrad) {
+                bandwidth3 = -bandwidth3;
+                nballx = canvasx - boxx - 10 - 10 - ranballrad;
+            }
+            if (nbally < boxy + 10 + ranballrad) {
+                bandheight3 = -bandheight3;
+                nbally = boxy + 10 + ranballrad;
+            }
+            if (nbally > canvasy - boxy + 10 - 10 - ranballrad) {
+                bandheight3 = -bandheight3;
+                nbally = canvasy - boxy + 10 - 10 - ranballrad;
+            }
+
+            ranball3x = nballx;
+            ranball3y = nbally;
+
+            var x = catchballx - ranball3x;
+            var y = catchbally - ranball3y;
+
+            angle3 = angle(x, y);
+
+            if (x * x + y * y <= (ranballrad + 10) * (ranballrad + 10)) {
+                ranballmatch(angle3, x, y, 3);
+            }
+        }
+        //랜덤한 4번 공의 움직임을 나타내기 위한 함수이다.
+        function moveranball4() {
+            moveandcheckran4();
+            ctx.beginPath();
+            ctx.fillStyle = "rgb(255,0,0)";
+            ctx.arc(ranball4x, ranball4y, ranballrad, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.closePath();
+        }
+        //랜덤한 4번 공의 움직임을 검사하기 위한 함수이다.
+        function moveandcheckran4() {
+            var nballx = ranball4x + bandwidth4;
+            var nbally = ranball4y + bandheight4;
+
+            if (nballx < boxx + 10 + ranballrad) {
+                bandwidth4 = -bandwidth4;
+                nballx = boxx + 10 + ranballrad;
+            }
+            if (nballx > canvasx - boxx - 10 - 10 - ranballrad) {
+                bandwidth4 = -bandwidth4;
+                nballx = canvasx - boxx - 10 - 10 - ranballrad;
+            }
+            if (nbally < boxy + 10 + ranballrad) {
+                bandheight4 = -bandheight4;
+                nbally = boxy + 10 + ranballrad;
+            }
+            if (nbally > canvasy - boxy + 10 - 10 - ranballrad) {
+                bandheight4 = -bandheight4;
+                nbally = canvasy - boxy + 10 - 10 - ranballrad;
+            }
+
+            ranball4x = nballx;
+            ranball4y = nbally;
+
+            var x = catchballx - ranball4x;
+            var y = catchbally - ranball4y;
+
+            angle4 = angle(x, y);
+
+            if (x * x + y * y <= (ranballrad + 10) * (ranballrad + 10)) {
+                ranballmatch(angle4, x, y, 4);
+            }
+        }
+        //목표로 하는 공의 생성
+        function catchball() {
+            document.site.catchballx.value = catchballx;
+            document.site.catchbally.value = catchbally;
+            match();
+            catchballcheck();
+            ctx.beginPath();
+            ctx.fillStyle = "rgb(0,0,255)";
+            ctx.arc(catchballx, catchbally, 10, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.closePath();
+        }
+        //목표로 하는 공의 위치를 검사하게 하는 함수이다.
+        function catchballcheck() {
+            if (catchballx < boxx + 10 + ballrad / 2) {
+                catchballx = boxx + 10 + ballrad / 2;
+            }
+            if (catchballx > canvasx - 30 - 10 - ballrad / 2) {
+                catchballx = canvasx - 30 - 10 - ballrad / 2;
+            }
+            if (catchbally < boxy + 10 + ballrad / 2) {
+                catchbally = boxy + 10 + ballrad / 2;
+            }
+            if (catchbally > canvasy - 20 - 10 - ballrad / 2) {
+                catchbally = canvasy - 20 - 10 - ballrad / 2;
+            }
+        }
+        //플레이어의 공이랑 목표로 하는 공이 만났을 때 카운트를 늘리고 목표 공의 위치를 바꾸고, 랜덤 공의 크기를 늘리기 위한 함수이다.
+        function match() {
+            if (distance <= 20) {
+                count = count + 1;
+                catchballx = 35 + Math.floor(Math.random() * 520);
+                catchbally = 45 + Math.floor(Math.random() * 420);
+                ranballrad = ranballrad + 2;
+            }
+        }
+        //플레이어의 공이랑 랜덤한 공이 만났을 때 실패를 나타나게 하는 함수이다.
+        function fail() {
+            if (randomdis1 <= ballrad + ranballrad) {
+                alert("Fail, 잡은 개수 : " + count);
+                var set = confirm('다시 하시겠습니까?');
+
+                if (set == true) {
+                    location.reload();
+
+                }
+            }
+            if (randomdis2 <= ballrad + ranballrad) {
+                alert("Fail, 잡은 개수 : " + count);
+                var set = confirm('다시 하시겠습니까?');
+
+                if (set == true) {
+                    location.reload();
+
+                }
+            }
+            if (randomdis3 <= ballrad + ranballrad) {
+                alert("Fail, 잡은 개수 : " + count);
+                var set = confirm('다시 하시겠습니까?');
+
+                if (set == true) {
+                    location.reload();
+
+                }
+            }
+            if (randomdis4 <= ballrad + ranballrad) {
+                alert("Fail, 잡은 개수 : " + count);
+                var set = confirm('다시 하시겠습니까?');
+
+                if (set == true) {
+                    location.reload();
+
+                }
+            }
+        }
+        //목표로 하는 공과 랜덤한 공이 만났을 때를 나타나게 하는 함수이다.
+        function ranballmatch(angle, sitex, sitey, num) {
+            //좌표계의 1사분면이다.
+            if (angle > 0 && angle < 90) {
+                if (sitex > 0) {
+                    catchballx += 20; // 오른쪽 방향으로 이동
+
+                    if (num == 1) {
+                        bandwidth = -bandwidth;
+                    }
+                    if (num == 2) {
+                        bandwidth2 = -bandwidth2;
+                    }
+                    if (num == 3) {
+                        bandwidth3 = -bandwidth3;
+                    }
+                    if (num == 4) {
+                        bandwidth4 = -bandwidth4;
+                    }
+
+                    return 0;
+                }
+                if (sitey > 0) {
+                    catchbally += 20; // 위 방향으로 이동
+
+                    if (num == 1) {
+                        bandheight = -bandheight;
+                    }
+                    if (num == 2) {
+                        bandheight2 = -bandheight2;
+                    }
+                    if (num == 3) {
+                        bandheight3 = -bandheight3;
+                    }
+                    if (num == 4) {
+                        bandheight4 = -bandheight4;
+                    }
+
+                    return 0;
+                }
+            }
+            //좌표계의 2사분면이다.
+            if (angle > 90 && angle < 180) {
+                if (sitex < 0) {
+                    catchballx -= 20; // 완쪽 방향으로 이동
+
+                    if (num == 1) {
+                        bandwidth = -bandwidth;
+                    }
+                    if (num == 2) {
+                        bandwidth2 = -bandwidth2;
+                    }
+                    if (num == 3) {
+                        bandwidth3 = -bandwidth3;
+                    }
+                    if (num == 4) {
+                        bandwidth4 = -bandwidth4;
+                    }
+
+                    return 0;
+                }
+                if (sitey > 0) {
+                    catchbally += 20; // 위 방향으로 이동
+
+                    if (num == 1) {
+                        bandheight = -bandheight;
+                    }
+                    if (num == 2) {
+                        bandheight2 = -bandheight2;
+                    }
+                    if (num == 3) {
+                        bandheight3 = -bandheight3;
+                    }
+                    if (num == 4) {
+                        bandheight4 = -bandheight4;
+                    }
+
+                    return 0;
+                }
+            }
+            //좌표계의 3사분면이다.
+            if (angle > -180 && angle < -90) {
+                if (sitex < 0) {
+                    catchballx -= 20; // 왼쪽 방향으로 이동
+
+                    if (num == 1) {
+                        bandwidth = -bandwidth;
+                    }
+                    if (num == 2) {
+                        bandwidth2 = -bandwidth2;
+                    }
+                    if (num == 3) {
+                        bandwidth3 = -bandwidth3;
+                    }
+                    if (num == 4) {
+                        bandwidth4 = -bandwidth4;
+                    }
+
+                    return 0;
+                }
+                if (sitey < 0) {
+                    catchbally -= 20; // 아래 방향으로 이동
+
+                    if (num == 1) {
+                        bandheight = -bandheight;
+                    }
+                    if (num == 2) {
+                        bandheight2 = -bandheight2;
+                    }
+                    if (num == 3) {
+                        bandheight3 = -bandheight3;
+                    }
+                    if (num == 4) {
+                        bandheight4 = -bandheight4;
+                    }
+
+                    return 0;
+                }
+            }
+            //좌표계의 4사분면이다.
+            if (angle > -90 && angle < 0) {
+                if (sitex > 0) {
+                    catchballx += 20; // 오른쪽 방향으로 이동
+
+                    if (num == 1) {
+                        bandwidth = -bandwidth;
+                    }
+                    if (num == 2) {
+                        bandwidth2 = -bandwidth2;
+                    }
+                    if (num == 3) {
+                        bandwidth3 = -bandwidth3;
+                    }
+                    if (num == 4) {
+                        bandwidth4 = -bandwidth4;
+                    }
+
+                    return 0;
+                }
+                if (sitey < 0) {
+                    catchbally -= 20; // 아래 방향으로 이동
+
+                    if (num == 1) {
+                        bandheight = -bandheight;
+                    }
+                    if (num == 2) {
+                        bandheight2 = -bandheight2;
+                    }
+                    if (num == 3) {
+                        bandheight3 = -bandheight3;
+                    }
+                    if (num == 4) {
+                        bandheight4 = -bandheight4;
+                    }
+
+                    return 0;
+                }
+            }
+        }
+        //랜덤한 공들이 서로 만났는 지를 체크하는 함수이다.
+        function reflexcheck() {
+            x[0] = ranball1x, x[1] = ranball2x, x[2] = ranball3x, x[3] = ranball4x;
+            y[0] = ranball1y, y[1] = ranball2y, y[2] = ranball3y, y[3] = ranball4y;
+            width[0] = bandwidth, width[1] = bandwidth2, width[2] = bandwidth3, width[3] = bandwidth4;
+            height[0] = bandheight, height[1] = bandheight2, height[2] = bandheight3, height[3] = bandheight4;
+
+            linear();
+
+            for (var i = 0; i < 4; i++) {
+                for (var j = i; j < 4; j++) {
+                    var sitex = x[i] - x[j];
+                    var sitey = y[i] - y[j];
+
+                    if (i != j) {
+                        if (sitex * sitex + sitey * sitey <= ranballrad * ranballrad * 4) {
+                            reflexmatch(i, j);
+                        }
+                    }
+                }
+            }
+        }
+        //랜덤한 공들이 서로 만났을 때를 나타나게 하는 함수이다.
+        function reflexmatch(x, y) {
+            if (x == 0 && y == 1) { // 랜덤 1번과 2번이 부딪혔을 때
+                if (spotangle[0] > 0 && spotangle[0] < 90) {
+                    bandwidth = -width[0];
+                }
+                if (spotangle[0] > 90 && spotangle[0] < 180) {
+                    bandheight = -height[0];
+                }
+                if (spotangle[0] > -180 && spotangle[0] < -90) {
+                    bandwidth = -width[0];
+                }
+                if (spotangle[0] > -90 && spotangle[0] < 0) {
+                    bandheight = -height[0];
+                }
+                if (spotangle[1] > 0 && spotangle[0] < 90) {
+                    bandwidth2 = -width[1];
+                }
+                if (spotangle[1] > 90 && spotangle[0] < 180) {
+                    bandheight2 = -height[1];
+                }
+                if (spotangle[1] > -180 && spotangle[0] < -90) {
+                    bandwidth2 = -width[1];
+                }
+                if (spotangle[1] > -90 && spotangle[0] < 0) {
+                    bandheight2 = -height[1];
+                }
+
+                return 0;
+            }
+            if (x == 0 && y == 2) { // 랜덤 1번과 3번이 부딪혔을 때
+                if (spotangle[2] > 0 && spotangle[2] < 90) {
+                    bandwidth = -width[0];
+                }
+                if (spotangle[2] > 90 && spotangle[2] < 180) {
+                    bandheight = -height[0];
+                }
+                if (spotangle[2] > -180 && spotangle[2] < -90) {
+                    bandwidth = -width[0];
+                }
+                if (spotangle[2] > -90 && spotangle[2] < 0) {
+                    bandheight = -height[0];
+                }
+                if (spotangle[3] > 0 && spotangle[3] < 90) {
+                    bandwidth3 = -width[2];
+                }
+                if (spotangle[3] > 90 && spotangle[3] < 180) {
+                    bandheight3 = -height[2];
+                }
+                if (spotangle[3] > -180 && spotangle[3] < -90) {
+                    bandwidth3 = -width[2];
+                }
+                if (spotangle[3] > -90 && spotangle[3] < 0) {
+                    bandheight3 = -height[2];
+                }
+
+                return 0;
+            }
+            if (x == 0 && y == 3) { // 랜덤 1번과 4번이 부딪혔을 때
+                if (spotangle[4] > 0 && spotangle[4] < 90) {
+                    bandwidth = -width[0];
+                }
+                if (spotangle[4] > 90 && spotangle[4] < 180) {
+                    bandheight = -height[0];
+                }
+                if (spotangle[4] > -180 && spotangle[4] < -90) {
+                    bandwidth = -width[0];
+                }
+                if (spotangle[4] > -90 && spotangle[4] < 0) {
+                    bandheight = -height[0];
+                }
+                if (spotangle[5] > 0 && spotangle[5] < 90) {
+                    bandwidth4 = -width[3];
+                }
+                if (spotangle[5] > 90 && spotangle[5] < 180) {
+                    bandheight4 = -height[3];
+                }
+                if (spotangle[5] > -180 && spotangle[5] < -90) {
+                    bandwidth4 = -width[3];
+                }
+                if (spotangle[5] > -90 && spotangle[5] < 0) {
+                    bandheight4 = -height[3];
+                }
+
+                return 0;
+            }
+            if (x == 1 && y == 2) { // 랜덤 2번과 3번이 부딪혔을 때
+                if (spotangle[6] > 0 && spotangle[6] < 90) {
+                    bandwidth2 = -width[1];
+                }
+                if (spotangle[6] > 90 && spotangle[6] < 180) {
+                    bandheight2 = -height[1];
+                }
+                if (spotangle[6] > -180 && spotangle[6] < -90) {
+                    bandwidth2 = -width[1];
+                }
+                if (spotangle[6] > -90 && spotangle[6] < 0) {
+                    bandheight2 = -height[1];
+                }
+                if (spotangle[7] > 0 && spotangle[7] < 90) {
+                    bandwidth3 = -width[2];
+                }
+                if (spotangle[7] > 90 && spotangle[7] < 180) {
+                    bandheight3 = -height[2];
+                }
+                if (spotangle[7] > -180 && spotangle[7] < -90) {
+                    bandwidth3 = -width[2];
+                }
+                if (spotangle[7] > -90 && spotangle[7] < 0) {
+                    bandheight3 = -height[2];
+                }
+
+                return 0;
+            }
+            if (x == 1 && y == 3) { // 랜덤 2번과 4번이 부딪혔을 때
+                if (spotangle[8] > 0 && spotangle[8] < 90) {
+                    bandwidth2 = -width[1];
+                }
+                if (spotangle[8] > 90 && spotangle[8] < 180) {
+                    bandheight2 = -height[1];
+                }
+                if (spotangle[8] > -180 && spotangle[8] < -90) {
+                    bandwidth2 = -width[1];
+                }
+                if (spotangle[8] > -90 && spotangle[8] < 0) {
+                    bandheight2 = -height[1];
+                }
+                if (spotangle[9] > 0 && spotangle[9] < 90) {
+                    bandwidth4 = -width[3];
+                }
+                if (spotangle[9] > 90 && spotangle[9] < 180) {
+                    bandheight4 = -height[3];
+                }
+                if (spotangle[9] > -180 && spotangle[9] < -90) {
+                    bandwidth4 = -width[3];
+                }
+                if (spotangle[9] > -90 && spotangle[9] < 0) {
+                    bandheight4 = -height[3];
+                }
+
+                return 0;
+            }
+            if (x == 2 && y == 3) { // 랜덤 3번과 4번이 부딪혔을 때
+                if (spotangle[10] > 0 && spotangle[10] < 90) {
+                    bandwidth3 = -width[2];
+                }
+                if (spotangle[10] > 90 && spotangle[10] < 180) {
+                    bandheight3 = -height[2];
+                }
+                if (spotangle[10] > -180 && spotangle[10] < -90) {
+                    bandwidth3 = -width[2];
+                }
+                if (spotangle[10] > -90 && spotangle[10] < 0) {
+                    bandheight3 = -height[2];
+                }
+                if (spotangle[11] > 0 && spotangle[11] < 90) {
+                    bandwidth4 = -width[3];
+                }
+                if (spotangle[11] > 90 && spotangle[11] < 180) {
+                    bandheight4 = -height[3];
+                }
+                if (spotangle[11] > -180 && spotangle[11] < -90) {
+                    bandwidth4 = -width[3];
+                }
+                if (spotangle[11] > -90 && spotangle[11] < 0) {
+                    bandheight4 = -height[3];
+                }
+
+                return 0;
+            }
+        }
+        //랜덤한 공들의 움직임을 일차함수로 나타낸 함수이다.
+        function linear() {
+            slope[0] = height[0] / width[0], slope[1] = height[1] / width[1];
+            slope[2] = height[2] / width[2], slope[3] = height[3] / width[3];
+
+            y_intercept[0] = y[0] - (height[0] / width[0]) * x[0], y_intercept[1] = y[1] - (height[1] / width[1]) * x[1];
+            y_intercept[2] = y[2] - (height[2] / width[2]) * x[2], y_intercept[3] = y[3] - (height[3] / width[3]) * x[3];
+
+            spot();
+        }
+        //랜덤한 공들이 서로 만나는 좌표를 나타낸 함수이다.
+        function spot() {
+            spotx[0] = - (y_intercept[0] - y_intercept[1]) / (slope[0] - slope[1]);
+            spoty[0] = slope[0] * spotx[0] + y_intercept[0];
+            spotx[1] = - (y_intercept[0] - y_intercept[2]) / (slope[0] - slope[2]);
+            spoty[1] = slope[0] * spotx[1] + y_intercept[0];
+            spotx[2] = - (y_intercept[0] - y_intercept[3]) / (slope[0] - slope[3]);
+            spoty[2] = slope[0] * spotx[2] + y_intercept[0];
+            spotx[3] = - (y_intercept[1] - y_intercept[2]) / (slope[1] - slope[2]);
+            spoty[3] = slope[1] * spotx[3] + y_intercept[1];
+            spotx[4] = - (y_intercept[1] - y_intercept[3]) / (slope[1] - slope[3]);
+            spoty[4] = slope[1] * spotx[4] + y_intercept[1];
+            spotx[5] = - (y_intercept[2] - y_intercept[3]) / (slope[2] - slope[3]);
+            spoty[5] = slope[2] * spotx[5] + y_intercept[2];
+
+            spotangle[0] = angle(x[0] - spotx[0], y[0] - spoty[0]); // 랜덤 1번과 지점 1 사이의 각도
+            spotangle[1] = angle(x[1] - spotx[0], y[1] - spoty[0]); // 랜덤 2번과 지점 1 사이의 각도
+            spotangle[2] = angle(x[0] - spotx[1], y[0] - spoty[1]); // 랜덤 1번과 지점 2 사이의 각도
+            spotangle[3] = angle(x[2] - spotx[1], y[2] - spoty[1]); // 랜덤 3번과 지점 2 사이의 각도
+            spotangle[4] = angle(x[0] - spotx[2], y[0] - spoty[2]); // 랜덤 1번과 지점 3 사이의 각도
+            spotangle[5] = angle(x[3] - spotx[2], y[3] - spoty[2]); // 랜덤 4번과 지점 3 사이의 각도
+            spotangle[6] = angle(x[1] - spotx[3], y[1] - spoty[3]); // 랜덤 2번과 지점 4 사이의 각도
+            spotangle[7] = angle(x[2] - spotx[3], y[2] - spoty[3]); // 랜덤 3번과 지점 4 사이의 각도
+            spotangle[8] = angle(x[1] - spotx[4], y[1] - spoty[4]); // 랜덤 2번과 지점 5 사이의 각도
+            spotangle[9] = angle(x[3] - spotx[4], y[3] - spoty[4]); // 랜덤 4번과 지점 5 사이의 각도
+            spotangle[10] = angle(x[2] - spotx[5], y[2] - spoty[5]); // 랜덤 3번과 지점 6 사이의 각도
+            spotangle[11] = angle(x[3] - spotx[5], y[3] - spoty[5]); // 랜덤 4번과 지점 6 사이의 각도
+
+        }
+        //목표로 하는 공과 랜덤한 공이 만난 각도를 나타나게 하는 함수이다.
+        function angle(x, y) {
+            return Math.atan2(y, x) * 180 / Math.PI;
+        }
+        //플레이어의 공의 위치를 키보드로 입력하기 위한 코드이다.
+        document.onkeydown = function (e) {
+            switch (e.key) {
+                case 'ArrowUp':
+                    // up arrow
+                    bally -= 20;
+                    break;
+                case 'ArrowDown':
+                    // down arrow
+                    bally += 20;
+                    break;
+                case 'ArrowLeft':
+                    // left arrow
+                    ballx -= 20;
+                    break;
+                case 'ArrowRight':
+                    // right arrow
+                    ballx += 20;
+                    break;
+            }
+        };
+
+    </script>
+    <style>
+        header {
+        width: 100%;
+        height: 20px;
+    }
+    nav {
+        width: 600px;
+        height: 500px;
+        float: left;
+    }
+    footer {
+        float: left;
+    }
+    p {
+        line-height: 1.6px;
+    }
+    </style>
+</head>
+
+<body onLoad="init();">
+    <header>
+        <h2>공을 움직여서 카운트를 누적시키자!!</h2>
+    </header>
+    <section>
+        <nav>
+            <canvas id="canvas" width="600" height="500"></canvas>
+        </nav>
+        <article>
+            <p id="ranballrad"></p>
+            <p id="avoid"></p><br />
+        </article>
+    </section>
+    <footer>
+        <form name="site">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Ballx : <input type="text" name="ballx" value="" disabled />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Bally : <input type="text" name="bally" value="" disabled />&nbsp;
+            둘 사이의 거리 :
+            <input type="text" name="distance" value="" disabled /><br />
+
+            catchBallx : <input type="text" name="catchballx" value="" disabled />
+            catchBally : <input type="text" name="catchbally" value="" disabled />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            잡은 개수 :
+            <input type="text" name="count" value="" disabled />
+        </form>
+    </footer>
+    <br />
+</body>
+
+</html>
